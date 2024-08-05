@@ -159,7 +159,7 @@ if __name__ == "__main__":
     LATENT_DIM = 10
     DATA_DIM = 16
     BATCH_SIZE = 32
-    EPOCH = 400
+    EPOCH = 40
 
     FUNCTION = FunctionType()
     get_real_data = FUNCTION.get("sin")
