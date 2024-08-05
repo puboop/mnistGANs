@@ -10,17 +10,37 @@ import time
 """
 
 
-def get_real_data(data_dim, batch_size):
+class FunctionType:
+    """声明各种类型的真是数据函数
+    可绘制各种各样的函数图像
     """
-    一元二次方程公式：y = a*x^2 + b
-    """
-    for i in range(300):
-        # np.newaxis 在一维的数组中增加一个维度
-        a = np.random.uniform(1, 2, size=batch_size)[:, np.newaxis]
-        # repeat变换维度，将一维的数据转换为对应的维度，会将原有的一维重复至相应的维度
-        # -4, 4 为x的输入范围
-        base = np.linspace(-4, 4, data_dim)[np.newaxis, :].repeat(batch_size, axis=0)
-        yield a * np.power(base, 2) + (a - 1)
+
+    def get(self, func_name: str):
+        try:
+            return getattr(self, func_name)
+        except Exception:
+            raise ValueError(f"{self}对象中未找到{func_name}函数！！！")
+
+    def square(self, data_dim, batch_size):
+        """
+        一元二次方程公式：y = a*x^2 + b
+        """
+        for i in range(300):
+            # np.newaxis 在一维的数组中增加一个维度
+            a = np.random.uniform(1, 2, size=batch_size)[:, np.newaxis]
+            # repeat变换维度，将一维的数据转换为对应的维度，会将原有的一维重复至相应的维度
+            # -4, 4 为x的输入范围
+            base = np.linspace(-4, 4, data_dim)[np.newaxis, :].repeat(batch_size, axis=0)
+            yield a * np.power(base, 2) + (a - 1)
+
+    def sin(self, data_dim, batch_size):
+        """
+        获取真实数据
+        正弦函数公式：sin(x)
+        """
+        for i in range(300):
+            x = np.linspace(-4, 4, data_dim)[np.newaxis, :].repeat(batch_size, axis=0)
+            yield np.sin(x)
 
 
 class GAN(keras.Model):
@@ -140,6 +160,9 @@ if __name__ == "__main__":
     DATA_DIM = 16
     BATCH_SIZE = 32
     EPOCH = 400
+
+    FUNCTION = FunctionType()
+    get_real_data = FUNCTION.get("sin")
 
     set_soft_gpu(True)
     m = GAN(LATENT_DIM, DATA_DIM)
