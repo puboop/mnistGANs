@@ -1,3 +1,12 @@
+# 版本依赖
+Python 3.6.13
+
+```shell
+pip install -r requirements.txt
+```
+
+[github仓库](https://github.com/puboop/mnistGANs)
+
 # GANs implementation using MNIST data
 
 This repo is a collection of the implementations of many GANs. 
