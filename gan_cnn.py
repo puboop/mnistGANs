@@ -1,5 +1,7 @@
 from tensorflow.keras.layers import Conv2D, Dropout, Flatten, Dense, Reshape, Conv2DTranspose, ReLU, BatchNormalization, \
     LeakyReLU
+from tensorflow.keras import layers
+
 from tensorflow import keras
 import tensorflow as tf
 

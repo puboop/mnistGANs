@@ -13,6 +13,7 @@ class LSGAN(DCGAN):
     def __init__(self, latent_dim, img_shape, a, b, c):
         super().__init__(latent_dim, img_shape)
         self.a, self.b, self.c = a, b, c
+        # 计算预测值与实际值之间误差的平方的平均值
         self.loss_func = keras.losses.MeanSquaredError()
 
     def step(self, img):

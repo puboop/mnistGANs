@@ -57,8 +57,8 @@ class DCGAN(keras.Model):
         d_label = tf.ones((len(img) * 2, 1), tf.float32)  # let d think generated images are real
         g_loss, g_img, g_acc = self.train_g(d_label)
 
-        d_label = tf.concat((tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
-        img = tf.concat((img, g_img[:len(g_img)//2]), axis=0)
+        d_label = tf.concat((tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img) // 2, 1), tf.float32)), axis=0)
+        img = tf.concat((img, g_img[:len(g_img) // 2]), axis=0)
         d_loss, d_acc = self.train_d(img, d_label)
         return d_loss, d_acc, g_loss, g_acc
 
@@ -70,9 +70,8 @@ def train(gan, ds, epoch):
             d_loss, d_acc, g_loss, g_acc = gan.step(img)
             if t % 400 == 0:
                 t1 = time.time()
-                print(
-                    "ep={} | time={:.1f} | t={} | d_acc={:.2f} | g_acc={:.2f} | d_loss={:.2f} | g_loss={:.2f}".format(
-                        ep, t1 - t0, t, d_acc.numpy(), g_acc.numpy(), d_loss.numpy(), g_loss.numpy(), ))
+                print("ep={} | time={:.1f} | t={} | d_acc={:.2f} | g_acc={:.2f} | d_loss={:.2f} | g_loss={:.2f}"
+                      .format(ep, t1 - t0, t, d_acc.numpy(), g_acc.numpy(), d_loss.numpy(), g_loss.numpy(), ))
                 t0 = t1
         save_gan(gan, ep)
     save_weights(gan)
@@ -89,6 +88,3 @@ if __name__ == "__main__":
     d = get_half_batch_ds(BATCH_SIZE)
     m = DCGAN(LATENT_DIM, IMG_SHAPE)
     train(m, d, EPOCH)
-
-
-
