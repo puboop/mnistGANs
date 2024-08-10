@@ -9,6 +9,9 @@ from mnist_ds import get_half_batch_ds
 from gan_cnn import mnist_uni_disc_cnn, mnist_uni_gen_cnn
 import time
 
+"""
+简化了判别器的能力，只去判断图片是否真实就ok
+"""
 
 class ACGAN(keras.Model):
     """
