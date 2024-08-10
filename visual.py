@@ -42,6 +42,7 @@ def save_gan(model, ep, **kwargs):
         path = dir_ + "/{}.png".format(ep)
         plt.savefig(path)
     elif name == "cgan" or name == "acgan":
+        # repeat将ndarray中的每个元素重复10次，在axis=0轴上
         img_label = np.arange(0, 10).astype(np.int32).repeat(10, axis=0)
         imgs = model.predict(img_label)
         _save_gan(name, ep, imgs, show_label=True)
