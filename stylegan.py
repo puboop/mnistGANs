@@ -31,7 +31,8 @@ class AdaNorm(keras.layers.Layer):
 
 class AdaMod(keras.layers.Layer):
     """
-    把 Mapping net 出来的 w 加工成两个 y 用来控制特征图 x 的缩放平移变化。 所有在这里我们需需要将 w 通过举证运算，转化成 y 使之可以匹配特征图的格式。
+    把 Mapping net 出来的 w 加工成两个 y 用来控制特征图 x 的缩放平移变化。
+     所有在这里我们需要将 w 通过矩阵运算，转化成 y 使之可以匹配特征图的格式。
     """
     def __init__(self):
         super().__init__()
@@ -160,6 +161,7 @@ class StyleGAN(keras.Model):
         if isinstance(inputs[0], np.ndarray):
             inputs = (tf.convert_to_tensor(i) for i in inputs)
         inputs = [tf.ones((len(inputs[0]), 1)), *inputs]
+        # 输入三个值 标签，随机噪声，噪声
         return self.g.call(inputs, training=training)
 
     def _get_generator(self):
@@ -177,7 +179,9 @@ class StyleGAN(keras.Model):
         w = Map(size=128)(z)
         # 扩展维度
         noise = tf.expand_dims(noise_, axis=-1)
+        # 添加噪声
         x = AddNoise()((const, noise))
+        # 将添加的随机噪声拉回正态分布
         x = AdaNorm()(x)
         x = Style(64, upsampling=False)((x, w[:, 0], noise))  # 7^2
         x = Style(64)((x, w[:, 1], noise))  # 14^2
