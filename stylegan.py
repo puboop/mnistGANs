@@ -12,6 +12,9 @@ import tensorflow.keras.initializers as initer
 
 
 class AdaNorm(keras.layers.Layer):
+    """
+    用于将特征图拉回原来的正态分布
+    """
     def __init__(self, axis=(1, 2), epsilon=1e-5):
         super().__init__()
         # NHWC
@@ -27,6 +30,9 @@ class AdaNorm(keras.layers.Layer):
 
 
 class AdaMod(keras.layers.Layer):
+    """
+    把 Mapping net 出来的 w 加工成两个 y 用来控制特征图 x 的缩放平移变化。 所有在这里我们需需要将 w 通过举证运算，转化成 y 使之可以匹配特征图的格式。
+    """
     def __init__(self):
         super().__init__()
         self.y = None
@@ -50,6 +56,9 @@ class AdaMod(keras.layers.Layer):
 class AddNoise(keras.layers.Layer):
     """
     自定义模型层，添加噪声
+    添加随机噪点的方式，这里其实还可以有其他方式去添加，
+    我为了简化在这里传入的 inputs 的 noise，将它设定成每一层 CNN 特征图都可以用的 noise，所以每层CNN传递的noise都一样。
+    但是我会对这个 noise 选取不同的长宽大小，来匹配上当前特征图的长宽。
     """
 
     def __init__(self):
@@ -90,6 +99,8 @@ class Map(keras.layers.Layer):
             # input_shape：输入张量的形状。input_shape[1:] 提取除 batch size 外的形状部分，因为 Dense 层只关注每个样本的形状。
             keras.layers.Dense(self.size, input_shape=input_shape[1:]),
             # keras.layers.LeakyReLU(0.2),  # worse performance when using non-linearity in mapping
+            # 但是有意思的是，如果我在 Mapping net 的全连接层加上激活函数，做一些非线性的话， 生成结果就要差很多。
+            # 我不明白其中的道理，因为安理来说，非线性是 mapping 的核心概念，就是要转换空间分布的，可是为什么这个试验中，反而有坏处呢？ 有想法的同学可以在下面讨论一下。
             keras.layers.Dense(self.size),
         ])
 
@@ -194,7 +205,9 @@ class StyleGAN(keras.Model):
         return loss
 
     def train_g(self, n):
+        # 随机两种不同的噪声
         available_z = [tf.random.normal((n, 1, self.latent_dim)) for _ in range(2)]
+        # 根据总样式随机不同的噪声
         z = tf.concat([available_z[np.random.randint(0, len(available_z))] for _ in range(self.n_style)], axis=1)
 
         noise = tf.random.normal((n, self.img_shape[0], self.img_shape[1]))
