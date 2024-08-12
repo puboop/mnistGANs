@@ -39,13 +39,19 @@ class AdaMod(keras.layers.Layer):
 
     def build(self, input_shape):
         x_shape, w_shape = input_shape
-        self.y = keras.Sequential([
-            keras.layers.Dense(x_shape[-1]*2, input_shape=w_shape[1:], name="y",
-                               kernel_initializer=initer.RandomNormal(0, 1)),   # this kernel is important
-            keras.layers.Reshape([2, 1, 1, -1])])  # [2, h, w, c]
+        self.y = keras.Sequential([keras.layers.Dense(x_shape[-1] * 2,
+                                                      input_shape=w_shape[1:],
+                                                      name="y",
+                                                      kernel_initializer=initer.RandomNormal(0, 1)),
+                                   # this kernel is important
+                                   keras.layers.Reshape([2, 1, 1, -1])])  # [2, h, w, c]
 
 
 class AddNoise(keras.layers.Layer):
+    """
+    自定义模型层，添加噪声
+    """
+
     def __init__(self):
         super().__init__()
         self.s = None
@@ -57,14 +63,21 @@ class AddNoise(keras.layers.Layer):
         return self.s * noise_ + x
 
     def build(self, input_shape):
+        # 在实际调用层之前调用，指挥被调用一次
         self.x_shape, _ = input_shape
-        self.s = self.add_weight(name="noise_scale", shape=[1, 1, self.x_shape[-1]],     # [h, w, c]
-                                 initializer=initer.random_normal(0., 1.))   # large initial noise
+        self.s = self.add_weight(name="noise_scale",
+                                 shape=[1, 1, self.x_shape[-1]],  # [h, w, c]
+                                 initializer=initer.random_normal(0., 1.))  # large initial noise
 
 
 class Map(keras.layers.Layer):
+    """
+    自定义模型map对输入数据进行映射
+    """
+
     def __init__(self, size):
         super().__init__()
+        # size：Map 层的一个参数，表示 Dense 层的输出维度。
         self.size = size
         self.f = None
 
@@ -74,6 +87,7 @@ class Map(keras.layers.Layer):
 
     def build(self, input_shape):
         self.f = keras.Sequential([
+            # input_shape：输入张量的形状。input_shape[1:] 提取除 batch size 外的形状部分，因为 Dense 层只关注每个样本的形状。
             keras.layers.Dense(self.size, input_shape=input_shape[1:]),
             # keras.layers.LeakyReLU(0.2),  # worse performance when using non-linearity in mapping
             keras.layers.Dense(self.size),
@@ -102,6 +116,13 @@ class Style(keras.layers.Layer):
         self.ada_mod = AdaMod()
         self.ada_norm = AdaNorm()
         if self.upsampling:
+            # keras.layers.UpSampling2D 是 Keras 中用于上采样的层，它用于在卷积神经网络中增加特征图的空间分辨率。
+            # 上采样通常用于生成模型（如 GAN）或语义分割模型中，以提高图像的分辨率。
+            # UpSampling2D 的参数和功能
+            # size: 上采样因子，即每个维度的放大倍数。例如，(2, 2) 表示在高度和宽度两个维度上都将特征图的尺寸放大 2 倍。
+            # interpolation: 插值方法，用于在上采样过程中计算新像素的值。可以选择以下方法：
+            # "nearest"：最近邻插值。
+            # "bilinear"：双线性插值。
             self.up = keras.layers.UpSampling2D((2, 2), interpolation="bilinear")
         self.add_noise = AddNoise()
         self.conv = keras.layers.Conv2D(self.filters, 3, 1, "same")
@@ -111,6 +132,7 @@ class StyleGAN(keras.Model):
     """
     重新定义generator,生成图片
     """
+
     def __init__(self, latent_dim, img_shape):
         super().__init__()
         self.latent_dim = latent_dim
@@ -135,16 +157,19 @@ class StyleGAN(keras.Model):
         ones = keras.Input((1,), name="ones")
 
         const = keras.Sequential([
-            keras.layers.Dense(7*7*128, use_bias=False, name="const"),
+            keras.layers.Dense(7 * 7 * 128, use_bias=False, name="const"),
+            # Reshape 层的作用是将输入张量重新组织成指定的形状，这对于构建和调整模型的网络架构非常有用。
+            # 它可以将数据从一个形状转换为另一个形状，以便输入到后续的层中。
             keras.layers.Reshape((7, 7, 128)),
         ], name="const")(ones)
 
         w = Map(size=128)(z)
+        # 扩展维度
         noise = tf.expand_dims(noise_, axis=-1)
         x = AddNoise()((const, noise))
         x = AdaNorm()(x)
-        x = Style(64, upsampling=False)((x, w[:, 0], noise))    # 7^2
-        x = Style(64)((x, w[:, 1], noise))      # 14^2
+        x = Style(64, upsampling=False)((x, w[:, 0], noise))  # 7^2
+        x = Style(64)((x, w[:, 1], noise))  # 14^2
         x = Style(64)((x, w[:, 2], noise))  # 28^2
         o = keras.layers.Conv2D(self.img_shape[-1], 5, 1, "same", activation=keras.activations.tanh)(x)
 
