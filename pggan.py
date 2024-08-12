@@ -107,7 +107,7 @@ class Discriminator(keras.Model):
         _x = None if current_layer >= 3 or current_layer == 0 else self.pool(x)
 
         if current_layer >= 2:
-            x = self.b3(x)   # better to learn upsampling?
+            x = self.b3(x)  # better to learn upsampling?
             if current_layer == 2:
                 _x = self.p3(_x)
                 x = fade(_x, x, p)
@@ -184,9 +184,9 @@ class PGGAN(keras.Model):
         d_label = tf.ones((len(img) * 2, 1), tf.float32)  # let d think generated images are real
         g_loss, g_img = self.train_g(d_label)
 
-        d_label = tf.concat(
-            (tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img)//2, 1), tf.float32)), axis=0)
-        real_fake_img = tf.concat((self.resize_img(img, g_img), g_img[:len(g_img)//2]), axis=0)
+        d_label = tf.concat((tf.ones((len(img), 1), tf.float32), tf.zeros((len(g_img) // 2, 1), tf.float32)),
+                            axis=0)
+        real_fake_img = tf.concat((self.resize_img(img, g_img), g_img[:len(g_img) // 2]), axis=0)
         d_loss = self.train_d(real_fake_img, d_label)
 
         # count
@@ -228,6 +228,3 @@ if __name__ == "__main__":
     d = get_half_batch_ds(BATCH_SIZE)
     m = PGGAN(LATENT_DIM, IMG_SHAPE, FADE_STEP)
     train(m, d, EPOCH)
-
-
-
