@@ -14,6 +14,7 @@ class CCGAN(keras.Model):
     """
     生成图片中被遮挡的部分
     """
+
     def __init__(self, label_dim, mask_range, img_shape):
         super().__init__()
         self.label_dim = label_dim
@@ -35,9 +36,9 @@ class CCGAN(keras.Model):
     def _get_discriminator(self):
         img = keras.Input(shape=self.img_shape)
         s = keras.Sequential([
-            keras.layers.GaussianNoise(0.01, input_shape=self.img_shape),   # add some noise
+            keras.layers.GaussianNoise(0.01, input_shape=self.img_shape),  # add some noise
             mnist_uni_disc_cnn(),
-            keras.layers.Dense(1+self.label_dim)
+            keras.layers.Dense(1 + self.label_dim)
         ])
         o = s(img)
         o_bool, o_class = o[:, :-self.label_dim], o[:, -self.label_dim:]
@@ -60,7 +61,7 @@ class CCGAN(keras.Model):
 
     def train_g(self, img, img_label):
         masked_img = self.get_rand_masked(img)
-        d_label = tf.ones((len(img_label), 1), tf.float32)   # let d think generated images are real
+        d_label = tf.ones((len(img_label), 1), tf.float32)  # let d think generated images are real
         with tf.GradientTape() as tape:
             g_img = self.g.call(masked_img, training=True)
             pred_bool, pred_class = self.d.call([g_img, img_label], training=False)
@@ -71,17 +72,21 @@ class CCGAN(keras.Model):
 
     def get_rand_masked(self, img):
         mask_width = np.random.randint(self.mask_range[0], self.mask_range[1])
+        # 生成两个数的ndarray 【1，2】作为一个遮掩的起始点坐标
         mask_xy = np.random.randint(0, self.img_shape[0] - mask_width, (2,))
+        # 生成一张全是1的图片
         mask = np.ones(self.img_shape, np.float32)
+        # 将指定区域的数据全部置为0
         mask[mask_xy[0]:mask_width + mask_xy[0], mask_xy[0]:mask_width + mask_xy[0]] = 0
         mask = tf.convert_to_tensor(np.expand_dims(mask, axis=0))
+        # 将输入的图片与mask图片相乘，1乘原有图片数据不发生改变，0乘会将指定区域的图片数据置为0
         masked_img = img * mask
         return masked_img
 
     def step(self, real_img, real_img_label):
         g_loss, g_img, g_acc = self.train_g(real_img, real_img_label)
 
-        half = len(g_img)//2
+        half = len(g_img) // 2
         img = tf.concat((real_img[:half], g_img[half:]), axis=0)
         d_label = tf.concat((tf.ones((half, 1), tf.float32), tf.zeros((half, 1), tf.float32)), axis=0)
         d_loss, d_acc = self.train_d(img, real_img_label, d_label)
@@ -95,8 +100,8 @@ def train(gan, ds, test_x):
             d_loss, d_acc, g_loss, g_acc = gan.step(real_img, real_img_label)
             if t % 400 == 0:
                 t1 = time.time()
-                print("ep={} | time={:.1f} | t={} | d_acc={:.2f} | g_acc={:.2f} | d_loss={:.2f} | g_loss={:.2f}".format(
-                    ep, t1-t0, t, d_acc.numpy(), g_acc.numpy(), d_loss.numpy(), g_loss.numpy(), ))
+                print("ep={} | time={:.1f} | t={} | d_acc={:.2f} | g_acc={:.2f} | d_loss={:.2f} | g_loss={:.2f}"
+                      .format(ep, t1 - t0, t, d_acc.numpy(), g_acc.numpy(), d_loss.numpy(), g_loss.numpy(), ))
                 t0 = t1
         save_gan(gan, ep, img=test_x)
     save_weights(gan)
@@ -116,9 +121,3 @@ if __name__ == "__main__":
     d = get_ds(BATCH_SIZE)
     m = CCGAN(LATENT_DIM, MASK_RANGE, IMG_SHAPE)
     train(m, d, test_x)
-
-
-
-
-
-

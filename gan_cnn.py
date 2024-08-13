@@ -99,27 +99,25 @@ def mnist_uni_img2img(img_shape, name="generator", norm="batch"):
             _norm = []
         return _norm
 
-    model = keras.Sequential([
-                                 # [n, 28, 28, n] -> [n, 14, 14, 64]
-                                 Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=img_shape),
-                             ] + do_norm() + [
-                                 LeakyReLU(),
-                                 # -> [n, 7, 7, 128]
-                                 Conv2D(128, (4, 4), strides=(2, 2), padding='same'),
-                             ] + do_norm() + [
-                                 LeakyReLU(),
-
-                                 # -> [n, 14, 14, 64]
-                                 Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same'),
-                             ] + do_norm() + [
-                                 ReLU(),
-                                 # -> [n, 28, 28, 32]
-                                 Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same'),
-                             ] + do_norm() + [
-                                 ReLU(),
-                                 # -> [n, 28, 28, 1]
-                                 Conv2D(img_shape[-1], (4, 4), padding='same', activation=keras.activations.tanh)
-                             ], name=name)
+    model = keras.Sequential([  # [n, 28, 28, n] -> [n, 14, 14, 64]
+                                Conv2D(64, (4, 4), strides=(2, 2), padding='same', input_shape=img_shape), ]
+                             + do_norm()
+                             + [LeakyReLU(),
+                                # -> [n, 7, 7, 128]
+                                Conv2D(128, (4, 4), strides=(2, 2), padding='same'), ]
+                             + do_norm()
+                             + [LeakyReLU(),
+                                # -> [n, 14, 14, 64]
+                                Conv2DTranspose(64, (4, 4), strides=(2, 2), padding='same'), ]
+                             + do_norm()
+                             + [ReLU(),
+                                # -> [n, 28, 28, 32]
+                                Conv2DTranspose(32, (4, 4), strides=(2, 2), padding='same'), ]
+                             + do_norm()
+                             + [ReLU(),
+                                # -> [n, 28, 28, 1]
+                                Conv2D(img_shape[-1], (4, 4), padding='same', activation=keras.activations.tanh)],
+                             name=name)
     return model
 
 
