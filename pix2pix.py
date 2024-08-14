@@ -15,6 +15,7 @@ class Pix2Pix(keras.Model):
     根据输入图片,按要求生成输出图片
     包含Unet, PatchGAN
     """
+
     def __init__(self, mask_range, img_shape, lambda_):
         super().__init__()
         self.mask_range = mask_range
@@ -40,7 +41,7 @@ class Pix2Pix(keras.Model):
         # -> [n, 7, 7, 128]
         s = keras.Sequential([
             *mnist_uni_disc_cnn(
-                input_shape=[self.img_shape[0], self.img_shape[1], self.img_shape[2]*2]
+                input_shape=[self.img_shape[0], self.img_shape[1], self.img_shape[2] * 2]
             ).layers[:-1],  # remove flatten
             keras.layers.Conv2D(1, (4, 4))
         ])
@@ -65,7 +66,7 @@ class Pix2Pix(keras.Model):
 
     def train_g(self, input_img, real_img):
         # patched label
-        d_label = tf.ones((len(real_img), 4, 4), tf.float32)   # let d think generated images are real
+        d_label = tf.ones((len(real_img), 4, 4), tf.float32)  # let d think generated images are real
         with tf.GradientTape() as tape:
             g_img = self.g.call(input_img, training=True)
             pred = self.d.call([input_img, g_img], training=False)
@@ -87,11 +88,10 @@ class Pix2Pix(keras.Model):
         input_img = self.get_rand_masked(real_img)
         g_loss, g_img = self.train_g(input_img, real_img)
 
-        half = len(g_img)//2
+        half = len(g_img) // 2
         img = tf.concat((real_img[:half], g_img[half:]), axis=0)
         # patched label
-        d_label = tf.concat(
-            (tf.ones((half, 4, 4), tf.float32), tf.zeros((half, 4, 4), tf.float32)), axis=0)
+        d_label = tf.concat((tf.ones((half, 4, 4), tf.float32), tf.zeros((half, 4, 4), tf.float32)), axis=0)
         d_loss = self.train_d(input_img, img, d_label)
         return d_loss, g_loss
 
@@ -103,8 +103,8 @@ def train(gan, ds, test_x):
             d_loss, g_loss = gan.step(real_img)
             if t % 400 == 0:
                 t1 = time.time()
-                print("ep={} | time={:.1f} | t={} | d_loss={:.2f} | g_loss={:.2f}".format(
-                    ep, t1-t0, t, d_loss.numpy(), g_loss.numpy()))
+                print("ep={} | time={:.1f} | t={} | d_loss={:.2f} | g_loss={:.2f}"
+                      .format(ep, t1 - t0, t, d_loss.numpy(), g_loss.numpy()))
                 t0 = t1
         save_gan(gan, ep, img=test_x)
     save_weights(gan)
@@ -123,9 +123,3 @@ if __name__ == "__main__":
     d = get_ds(BATCH_SIZE)
     m = Pix2Pix(MASK_RANGE, IMG_SHAPE, LAMBDA)
     train(m, d, test_x)
-
-
-
-
-
-
