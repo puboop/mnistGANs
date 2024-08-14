@@ -16,6 +16,7 @@ class SRGAN(keras.Model):
     原算法中使用预训练 VGG 作为 feature map 的提取器, 计算"生成像素误差", 我不想引入太多网络,
     所以我直接使用 Discriminator 的 feature map 做这件事, 效果还可以的.
     """
+
     def __init__(self, lr_img_shape, hr_img_shape, lambda_adver):
         super().__init__()
         self.lr_img_shape = lr_img_shape
@@ -105,7 +106,7 @@ class SRGAN(keras.Model):
         return loss
 
     def train_g(self, lr_img, hr_img):
-        d_label = tf.ones((len(lr_img), 1), tf.float32)   # let d think generated images are real
+        d_label = tf.ones((len(lr_img), 1), tf.float32)  # let d think generated images are real
         with tf.GradientTape() as tape:
             sr_img = self.g.call(lr_img, training=True)
             # don't have pretrained VGG for extracting feature map, try disc's feature map instead
@@ -121,7 +122,7 @@ class SRGAN(keras.Model):
     def step(self, lr_img, hr_img):
         g_loss, sr_img = self.train_g(lr_img, hr_img)
 
-        half = len(sr_img)//2
+        half = len(sr_img) // 2
         img = tf.concat((hr_img[:half], sr_img[half:]), axis=0)
         # patched label
         d_label = tf.concat(
@@ -141,8 +142,8 @@ def train(gan, hr, lr_test, steps, batch_size):
             save_gan(gan, t, img=lr_test)
             t1 = time.time()
             print(
-                "t={}|time={:.1f}|g_loss={:.2f}|d_loss={:.2f}".format(
-                    t, t1 - t0, g_loss.numpy(), d_loss.numpy()))
+                "t={}|time={:.1f}|g_loss={:.2f}|d_loss={:.2f}"
+                .format(t, t1 - t0, g_loss.numpy(), d_loss.numpy()))
             t0 = t1
     save_weights(gan)
     cvt_gif(gan)
@@ -160,9 +161,3 @@ if __name__ == "__main__":
     LR_TEST = downsampling(get_test_x(), to_shape=LR_IMG_SHAPE)
     m = SRGAN(LR_IMG_SHAPE, HR_IMG_SHAPE, LAMBDA_ADVER)
     train(m, HR, LR_TEST, STEPS, BATCH_SIZE)
-
-
-
-
-
-
